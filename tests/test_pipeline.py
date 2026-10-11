@@ -12,11 +12,19 @@ from ytagent.config import Settings
 from ytagent.editor import caption_chunks
 from ytagent.history import max_similarity
 from ytagent.media import Clip
-from ytagent.models import (IdeaList, Idea, Metadata, PackagingChoice, PackagingVariant,
-                            PackagingVariants, Script, Segment)
+from ytagent.models import (IdeaList, Idea, Lessons, Metadata, PackagingChoice, PackagingVariant,
+                            PackagingVariants, Script, Segment, TaskInterpretation)
 
 BRIEF = """# Channel
-Calm explainers about the deep ocean.
+Calm explainers for teens.
+
+## Niches
+
+### Deep ocean
+Strange deep sea facts.
+
+### Space
+Space mysteries.
 
 ## Settings
 - videos_per_run: 2
@@ -56,6 +64,13 @@ class FakeClaude:
             return PackagingChoice(best_index=1, reasoning="clearest")
         if schema is Metadata:
             return Metadata(description="Deep sea light.", tags=["ocean", "deep sea"])
+        if schema is TaskInterpretation:
+            return TaskInterpretation(count=3, niche="black holes", niche_description="Black hole facts",
+                                      style_notes="mysterious", matches_existing_niche="Space")
+        if schema is Lessons:
+            return Lessons(summary="Hooks with questions win.", what_works=["question hooks (video A)"],
+                           what_doesnt=["slow intros"], per_niche=["Space: strong"], experiments=["shorter hook"],
+                           confidence="low")
         raise AssertionError(schema)
 
 

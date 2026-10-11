@@ -4,7 +4,7 @@ En AI-agent som gör YouTube Shorts från början till slut: idé, manus, röst,
 redigering, titel- och thumbnailvarianter, beskrivning, taggar och uppladdning.
 
 ```
-brief.md ─► idéer ─► manus ─► röst ─► stockfilm ─► redigering ─► 3 titlar/thumbnails ─► metadata ─► uppladdning (privat)
+brief.md / ditt uppdrag ─► plan (nisch, antal, stil) ─► idéer ─► manus ─► röst ─► stockfilm ─► redigering ─► 3 titlar/thumbnails ─► metadata ─► uppladdning (privat)
               ▲                                                                                        │
      style_guide.md + learnings.md + historik ◄──────────────── (steg 2: analytics) ◄──────────────────┘
 ```
@@ -14,14 +14,16 @@ brief.md ─► idéer ─► manus ─► röst ─► stockfilm ─► rediger
 | Steg | Klart |
 |---|---|
 | 1. En video från brief till privat uppladdning, godkännandeläge | ✅ |
-| 2. Analytics (CTR, visningstid, retention) → `learnings.md` → uppdaterad `style_guide.md` | nästa |
-| 3. Schemaläggning (publiceringstider, automatisk körning) | sen |
+| 2. Upp till 3 nischer, fritt uppdrag ("gör 3 videos om X i stil Y"), målgrupp 13–20 | ✅ |
+| 3. Analytics (visningstid, retention, hook-retention, CTR om API:t ger det) → `learnings.md` → uppdaterad `style_guide.md` | ✅ |
+| 4. Schemaläggning (publiceringstider, kö, `auto` för cron) | ✅ |
 
 ## Moduler
 
 | Fil | Gör |
 |---|---|
-| `ytagent/brief.py` | Läser `brief.md` |
+| `ytagent/brief.py` | Läser `brief.md` (målgrupp, upp till 3 nischer, inställningar) |
+| `ytagent/planner.py` | Tolkar ditt uppdrag (antal, nisch, stil) eller roterar mellan nischerna |
 | `ytagent/style.py` | Skapar/uppdaterar `style_guide.md` (kanalens smak) |
 | `ytagent/ideas.py` | Unika idéer, undviker allt som redan gjorts |
 | `ytagent/script.py` | Manus: hook (första sekunderna), body, call to action, sökord för film |
@@ -33,6 +35,9 @@ brief.md ─► idéer ─► manus ─► röst ─► stockfilm ─► rediger
 | `ytagent/youtube.py` | OAuth, uppladdning, thumbnail, publicera/schemalägg |
 | `ytagent/pipeline.py` | Kör allt; en misslyckad video stoppar inte resten |
 | `ytagent/history.py` | Minne över allt som gjorts + spärr mot för lika manus |
+| `ytagent/analytics.py` | Hämtar statistik via YouTube Data API + YouTube Analytics API |
+| `ytagent/learn.py` | Drar lärdomar → `learnings.md`, uppdaterar `style_guide.md` |
+| `ytagent/scheduler.py` | Nästa lediga publiceringstid, hur många videos kön behöver |
 
 Allt sparas i `output/<datum>_<namn>/` (manus, ljud, film, thumbnails, val och motivering).
 Loggar hamnar i `logs/agent.log`.
@@ -98,17 +103,66 @@ så räkna med några uppladdningar per dag tills kvoten höjs.
 
 ## Användning
 
+### Säg vad du vill ha
+
 ```bash
-python -m ytagent run --no-upload                 # testa: rendera bara, titta i output/
-python -m ytagent run                             # enligt brief.md, laddas upp som privat
-python -m ytagent run --count 3 --task "3 videos om bioluminescens"
-python -m ytagent list                            # allt agenten gjort och status
-python -m ytagent approve VIDEO_ID                # publicera nu
-python -m ytagent approve VIDEO_ID --at 2026-10-12T16:00:00Z   # schemalägg (UTC)
+python -m ytagent run "gör 3 videos om rymden i mystisk stil"     # fritt uppdrag, svenska går bra
+python -m ytagent run --niche "deep ocean" --count 2              # en nisch från brief.md
+python -m ytagent run                                             # agenten roterar mellan nischerna i brief.md
+python -m ytagent run "2 videos om hajar" --no-upload             # bara rendera, titta i output/ först
 ```
 
+Nischerna är inte låsta. Skriv upp till 3 under `## Niches` i `brief.md` (agenten växlar mellan dem),
+eller skippa dem helt och skriv vad du vill i kommandot. Målgruppen (13–20 år) och tonen står i `brief.md`.
+
+### Godkänn och schemalägg
+
 **Godkänn före publicering** är på som standard (`APPROVAL_REQUIRED=true`): videon laddas upp som privat och
-länken till YouTube Studio skrivs ut. Sätt `APPROVAL_REQUIRED=false` för full autonomi (kräver godkänd audit).
+länken till YouTube Studio skrivs ut. Titta, och sedan:
+
+```bash
+python -m ytagent list                       # allt agenten gjort, status, statistik
+python -m ytagent approve VIDEO_ID           # schemaläggs på nästa lediga tid
+python -m ytagent approve VIDEO_ID --now     # publicera direkt
+python -m ytagent schedule                   # visa schemat och nästa lediga tider
+```
+
+Publiceringstider styrs i `brief.md` (`publish_times`, `timezone`, `max_per_day`). Standard är 16:00 och 19:30
+(efter skolan och på kvällen), en video per dag. Har du fler tider än videos per dag växlar agenten mellan dem
+så att statistiken kan visa vilken tid som funkar bäst.
+
+Med `APPROVAL_REQUIRED=false` schemaläggs varje video direkt på nästa lediga tid (kräver godkänd audit, se ovan).
+
+### Inlärning
+
+```bash
+python -m ytagent analyze
+```
+
+Hämtar statistik för videos som varit ute 2–60 dagar: visningar, genomsnittlig andel sedd, visningstid,
+retention efter 3 och 5 sekunder (fångade hooken?), retention i slutet, delningar, prenumeranter och CTR
+om YouTube ger ut det via API:t för din kanal (för Shorts är retention viktigare än CTR). När minst 3 videos har
+statistik skriver Claude `learnings.md` (vad funkar, vad funkar inte, per nisch, experiment att testa) och
+uppdaterar `style_guide.md`. Allt detta läses in inför nästa video.
+
+### Helt automatiskt (cron)
+
+`auto` gör allt i rätt ordning: hämtar statistik, uppdaterar lärdomar (högst var 3:e dag), försöker igen med
+uppladdningar som misslyckats (t.ex. slut på kvot) och gör nya videos tills kön räcker `buffer_days` dagar framåt.
+Videos som väntar på ditt godkännande räknas in i kön, så den gör inte mer än du hinner titta på.
+
+```bash
+# macOS/Linux: crontab -e, kör varje dag 09:05
+5 9 * * * cd /sökväg/till/project1 && .venv/bin/python -m ytagent auto >> logs/cron.log 2>&1
+```
+
+Windows: Schemaläggaren (Task Scheduler) → Skapa grundläggande uppgift → Dagligen → Starta program:
+`C:\sökväg\till\project1\.venv\Scripts\python.exe`, argument `-m ytagent auto`, starta i `C:\sökväg\till\project1`.
+
+### Om något går fel
+
+- Varje video körs för sig: om en misslyckas loggas felet i `logs/agent.log` och nästa fortsätter.
+- Misslyckad uppladdning (t.ex. kvot slut): videon sparas som `rendered`. Kör `python -m ytagent upload` (eller vänta på `auto`).
 
 ## YouTubes regler och upphovsrätt
 
@@ -119,6 +173,9 @@ länken till YouTube Studio skrivs ut. Sätt `APPROVAL_REQUIRED=false` för full
   och beskrivningen får en rad om AI-röst. YouTube kräver markering för realistiskt AI-innehåll; för en AI-berättarröst
   är det inte alltid ett krav, men öppenhet skadar inte.
 - **Fakta**: manuset listar källor som hamnar i beskrivningen. Granska dem i godkännandeläget.
+- **Ung publik**: innehållet hålls åldersanpassat (inga farliga utmaningar m.m.). Videorna markeras som
+  *inte gjorda för barn* (`made_for_kids: false`), vilket stämmer för 13–20 år. Riktar du dig till barn under 13
+  måste du ändra till `true` (då stängs kommentarer och vissa funktioner av YouTube).
 
 ## Kända begränsningar
 

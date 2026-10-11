@@ -52,11 +52,11 @@ def youtube_client(settings: Settings, interactive: bool = False):
 
 def upload_video(settings: Settings, video: Path, title: str, description: str, tags: list[str],
                  category_id: str, language: str = "en", synthetic: bool = True,
-                 publish_at: str | None = None) -> str:
+                 made_for_kids: bool = False, publish_at: str | None = None) -> str:
     yt = youtube_client(settings)
     status = {
         "privacyStatus": "private",
-        "selfDeclaredMadeForKids": False,
+        "selfDeclaredMadeForKids": made_for_kids,
         # YouTube's "altered or synthetic content" disclosure.
         "containsSyntheticMedia": synthetic,
     }

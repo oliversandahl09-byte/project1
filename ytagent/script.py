@@ -5,11 +5,10 @@ from .llm import Claude
 from .models import Idea, Script
 from .prompts import SYSTEM
 
-WORDS_PER_SECOND = 2.5  # calm narrator
 
-
-def write_script(claude: Claude, context: str, idea: Idea, target_seconds: int, language: str) -> Script:
-    max_words = int(target_seconds * WORDS_PER_SECOND)
+def write_script(claude: Claude, context: str, idea: Idea, target_seconds: int, language: str,
+                 words_per_second: float = 2.5) -> Script:
+    max_words = int(target_seconds * words_per_second)
     prompt = (
         f"{context}\n\n<idea>\n{idea.model_dump_json(indent=2)}\n</idea>\n\n"
         f"Write the script for this Short in {language}. Total narration: {max_words - 25}-{max_words} words "

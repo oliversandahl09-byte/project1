@@ -10,6 +10,8 @@ YouTube rules you must follow:
 - No misleading titles or thumbnails: the video must deliver what the title promises.
 - No copyrighted material. Only licensed stock footage and our own text/voice.
 - Facts must be accurate. If unsure, leave it out rather than invent.
+- The audience includes teenagers: keep everything age-appropriate. No dangerous stunts or challenges,
+  no sexual content, no glorifying drugs, alcohol or violence, no body shaming.
 """
 
 
@@ -17,7 +19,8 @@ def read_optional(path: Path) -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
-def channel_context(brief_text: str, style_guide: str, learnings: str, history_titles: list[str]) -> str:
+def channel_context(brief_text: str, style_guide: str, learnings: str, history_titles: list[str],
+                    run_plan: str = "") -> str:
     parts = [f"<brief>\n{brief_text}\n</brief>"]
     if style_guide:
         parts.append(f"<style_guide>\n{style_guide}\n</style_guide>")
@@ -26,6 +29,8 @@ def channel_context(brief_text: str, style_guide: str, learnings: str, history_t
     if history_titles:
         listed = "\n".join(f"- {t}" for t in history_titles[-60:])
         parts.append(f"<already_published_or_made>\n{listed}\n</already_published_or_made>")
+    if run_plan:
+        parts.append(run_plan)
     return "\n\n".join(parts)
 
 

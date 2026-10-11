@@ -21,7 +21,9 @@ from .llm import Claude
 from .media import fetch_clips
 from .metadata import build_metadata
 from .models import Idea
+from .planner import RunPlan, make_plan
 from .prompts import channel_context, read_optional
+from .scheduler import next_slots
 from .script import write_script
 from .style import ensure_style_guide
 from .thumbnail import choose_packaging
@@ -53,46 +55,51 @@ class Pipeline:
         self.settings = settings
         self.claude = claude or Claude(settings)
 
-    def _context(self, brief: Brief) -> str:
+    def _context(self, brief: Brief, plan: RunPlan) -> str:
         style = ensure_style_guide(self.settings, self.claude, brief.text)
         learnings = read_optional(self.settings.learnings_path)
         titles = [h.get("title", "") for h in history.load(self.settings.history_path) if h.get("title")]
-        return channel_context(brief.text, style, learnings, titles)
+        return channel_context(brief.text, style, learnings, titles, plan.as_prompt())
 
-    def run(self, count: int | None = None, task: str = "", upload: bool = True) -> RunResult:
+    def run(self, count: int | None = None, task: str = "", niche: str = "", upload: bool = True) -> RunResult:
         brief = load_brief(self.settings.brief_path)
-        count = count or brief.video_count
-        context = self._context(brief)
-        ideas = generate_ideas(self.claude, context, count, task)
+        plan = make_plan(brief, history.load(self.settings.history_path), self.claude, task, niche, count)
+        log.info("Plan: %d video(s), nisch '%s'%s", plan.count, plan.niche,
+                 f", stil: {plan.style_notes}" if plan.style_notes else "")
+        context = self._context(brief, plan)
+        ideas = generate_ideas(self.claude, context, plan.count)
         log.info("%d idéer: %s", len(ideas), [i.title_working for i in ideas])
 
         result = RunResult()
         for idea in ideas:
             try:
-                entry = self.produce(brief, context, idea, upload)
+                entry = self.produce(brief, context, idea, upload, plan)
                 result.succeeded.append(entry)
             except Exception as e:  # one failed video must not stop the rest
                 log.error("Video '%s' misslyckades: %s\n%s", idea.title_working, e, traceback.format_exc())
                 result.failed.append({"idea": idea.title_working, "error": str(e)})
         return result
 
-    def produce(self, brief: Brief, context: str, idea: Idea, upload: bool) -> dict:
+    def produce(self, brief: Brief, context: str, idea: Idea, upload: bool, plan: RunPlan) -> dict:
         s = self.settings
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         vid_id = f"{stamp}_{slugify(idea.title_working)}"
         work = s.output_dir / vid_id
         work.mkdir(parents=True, exist_ok=True)
         entry: dict = {"id": vid_id, "dir": str(work), "idea": idea.model_dump(), "status": "started",
+                       "niche": plan.niche, "style_notes": plan.style_notes,
                        "created": datetime.now(timezone.utc).isoformat()}
         log.info("=== %s ===", idea.title_working)
 
         # Script
-        script = write_script(self.claude, context, idea, brief.target_seconds, brief.language)
+        script = write_script(self.claude, context, idea, brief.target_seconds, brief.language,
+                              brief.words_per_second)
         similarity = history.max_similarity(script.full_text, history.load(s.history_path))
         if similarity > MAX_SIMILARITY:
             raise ValueError(f"Manuset liknar en tidigare video för mycket ({similarity:.0%}); hoppar över")
         _write_json(work / "script.json", script.model_dump())
         entry["script"] = script.full_text
+        entry["hook"] = script.hook.narration
 
         # Voice
         segs = script.segments
@@ -118,24 +125,41 @@ class Pipeline:
         # Description + tags
         meta = build_metadata(self.claude, context, script, variant.title, clips, s.ai_disclosure)
         _write_json(work / "metadata.json", {"title": variant.title, **meta.model_dump()})
-        entry.update({"title": variant.title, "thumbnail": str(thumb), "video": str(video),
-                      "duration": round(total, 1), "status": "rendered"})
-
+        entry.update({"title": variant.title, "thumbnail_text": variant.thumbnail_text, "thumbnail": str(thumb),
+                      "video": str(video), "duration": round(total, 1), "status": "rendered"})
+        # Saved before upload, so a failed upload (e.g. quota) can be retried with `ytagent upload`.
+        _write_json(work / "manifest.json", entry)
+        history.upsert(s.history_path, entry)
         if upload:
-            video_id = youtube.upload_video(
-                s, video, variant.title, meta.description, meta.tags, brief.category_id,
-                language="en" if brief.language.lower().startswith("en") else "sv",
-                synthetic=s.ai_disclosure,
-            )
-            entry["youtube_id"] = video_id
-            entry["thumbnail_set"] = youtube.set_thumbnail(s, video_id, thumb)
-            if s.approval_required:
-                entry["status"] = "awaiting_approval"
-                log.info("Väntar på godkännande. Titta: https://studio.youtube.com/video/%s/edit  "
-                         "Godkänn: python -m ytagent approve %s", video_id, video_id)
-            else:
-                youtube.set_visibility(s, video_id)
-                entry["status"] = "published"
+            entry["upload_pending"] = True
+            history.upsert(s.history_path, entry)
+            entry = self.upload(brief, entry)
+        return entry
+
+    def upload(self, brief: Brief, entry: dict) -> dict:
+        s = self.settings
+        work = Path(entry["dir"])
+        meta = json.loads((work / "metadata.json").read_text(encoding="utf-8"))
+
+        # Without approval the video is scheduled for the next free slot right away.
+        publish_at = None
+        if not s.approval_required:
+            publish_at = next_slots(brief, history.load(s.history_path), 1)[0]
+        video_id = youtube.upload_video(
+            s, Path(entry["video"]), meta["title"], meta["description"], meta["tags"], brief.category_id,
+            language=brief.language_code, synthetic=s.ai_disclosure,
+            made_for_kids=brief.made_for_kids, publish_at=publish_at,
+        )
+        entry["youtube_id"] = video_id
+        entry["upload_pending"] = False
+        entry["thumbnail_set"] = youtube.set_thumbnail(s, video_id, Path(entry["thumbnail"]))
+        if publish_at:
+            entry.update({"status": "scheduled", "publish_at": publish_at})
+            log.info("Schemalagd %s: https://youtu.be/%s", publish_at, video_id)
+        else:
+            entry["status"] = "awaiting_approval"
+            log.info("Väntar på godkännande. Titta: https://studio.youtube.com/video/%s/edit  "
+                     "Godkänn: python -m ytagent approve %s", video_id, video_id)
         _write_json(work / "manifest.json", entry)
         history.upsert(s.history_path, entry)
         return entry
