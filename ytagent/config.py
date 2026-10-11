@@ -32,6 +32,7 @@ class Settings:
     elevenlabs_model: str = "eleven_multilingual_v2"
 
     pexels_api_key: str = ""
+    pixabay_api_key: str = ""
 
     approval_required: bool = True
     ai_disclosure: bool = True
@@ -93,6 +94,7 @@ def load_settings(root: Path | None = None) -> Settings:
     s.elevenlabs_voice_id = env("ELEVENLABS_VOICE_ID", "")
     s.elevenlabs_model = env("ELEVENLABS_MODEL") or s.elevenlabs_model
     s.pexels_api_key = env("PEXELS_API_KEY", "")
+    s.pixabay_api_key = env("PIXABAY_API_KEY", "")
     s.approval_required = _bool(env("APPROVAL_REQUIRED"), True)
     s.ai_disclosure = _bool(env("AI_DISCLOSURE"), True)
     s.font_path = env("FONT_PATH", "")

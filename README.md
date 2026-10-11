@@ -28,7 +28,7 @@ brief.md / ditt uppdrag ─► plan (nisch, antal, stil) ─► idéer ─► ma
 | `ytagent/ideas.py` | Unika idéer, undviker allt som redan gjorts |
 | `ytagent/script.py` | Manus: hook (första sekunderna), body, call to action, sökord för film |
 | `ytagent/voice.py` | Text-to-speech (OpenAI eller ElevenLabs), en ljudfil per segment |
-| `ytagent/media.py` | Stockfilm från Pexels (fritt licensierat), foto som reserv |
+| `ytagent/media.py` | Stockfilm från Pixabay och/eller Pexels (fritt licensierat), foto som reserv |
 | `ytagent/editor.py` | ffmpeg: 1080×1920, undertexter, textöverlägg, musik, ljudnivå (−14 LUFS) |
 | `ytagent/thumbnail.py` | 3 titel+thumbnail-varianter, Claude tittar på bilderna och väljer bäst |
 | `ytagent/metadata.py` | Beskrivning, taggar, källor, krediter, AI-markering |
@@ -64,7 +64,8 @@ och musik du har rätt till i `assets/music/`.
 | Claude | https://console.anthropic.com → API Keys | några kronor per Short. Sätt `CLAUDE_EFFORT=medium` för att spara |
 | OpenAI TTS (standard) | https://platform.openai.com/api-keys | mycket billigt, under en krona per Short |
 | ElevenLabs (bättre röst) | https://elevenlabs.io → Profile → API key, välj röst-ID i Voice Library | Starter-planen räcker till ca 40 Shorts/mån |
-| Pexels | https://www.pexels.com/api/ | gratis |
+| Pixabay (filmklipp) | Skapa konto på https://pixabay.com, gå sedan till https://pixabay.com/api/docs/ där din nyckel står | gratis |
+| Pexels (valfritt) | https://www.pexels.com/api/ (delar inte ut nya nycklar just nu) | gratis |
 
 Rekommendation inom 200–500 kr/mån: börja med OpenAI TTS (rösten `onyx` eller `sage`).
 Byt till ElevenLabs med `TTS_PROVIDER=elevenlabs` om du vill ha en mer mänsklig berättarröst.
@@ -168,7 +169,7 @@ Windows: Schemaläggaren (Task Scheduler) → Skapa grundläggande uppgift → D
 
 - **Unikt innehåll**: idéer och manus får se allt som gjorts tidigare, och ett manus som liknar en tidigare video
   för mycket stoppas automatiskt. Varje video ska svara på en egen fråga med eget värde.
-- **Material**: bara Pexels (fri licens, krediteras ändå i beskrivningen) och musik du själv lagt i `assets/music/`.
+- **Material**: bara Pixabay/Pexels (fri licens, krediteras ändå i beskrivningen, säker sökning på) och musik du själv lagt i `assets/music/`.
 - **AI-markering**: med `AI_DISCLOSURE=true` sätts YouTubes flagga för syntetiskt innehåll (`containsSyntheticMedia`)
   och beskrivningen får en rad om AI-röst. YouTube kräver markering för realistiskt AI-innehåll; för en AI-berättarröst
   är det inte alltid ett krav, men öppenhet skadar inte.

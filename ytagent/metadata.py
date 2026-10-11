@@ -24,7 +24,7 @@ def build_metadata(claude: Claude, context: str, script: Script, title: str,
     if script.sources_or_notes.strip():
         extra.append(f"Sources: {script.sources_or_notes.strip()}")
     if credits:
-        extra.append("Footage: " + "; ".join(credits) + " (Pexels License).")
+        extra.append("Footage: " + "; ".join(credits) + ".")
     if ai_disclosure:
         extra.append(AI_NOTE)
     description = meta.description.strip()
