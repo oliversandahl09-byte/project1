@@ -1,0 +1,11 @@
+.env
+secrets/
+output/
+logs/
+data/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+assets/music/*
+!assets/music/README.md

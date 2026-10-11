@@ -1,0 +1,8 @@
+anthropic>=1.13
+google-api-python-client>=2.150
+google-auth-oauthlib>=1.2
+python-dotenv>=1.0
+requests>=2.32
+pillow>=11.0
+pydantic>=2.9
+pytest>=8.0
