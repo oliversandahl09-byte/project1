@@ -41,3 +41,12 @@ def test_falls_back_to_photo_then_background(tmp_path: Path):
                         sources=[FakePixabay([], [photo])])
     assert clips[0].kind == "photo"
     assert clips[1].kind == "none"  # photo already used, nothing else found
+
+
+def test_missing_ffmpeg_fails_fast(monkeypatch, tmp_path):
+    import pytest
+    from ytagent import ffmpeg, pipeline
+
+    monkeypatch.setattr(ffmpeg.shutil, "which", lambda name: None)
+    with pytest.raises(ffmpeg.FFmpegError, match="winget install"):
+        pipeline.Pipeline(Settings(root=tmp_path), claude=object()).run()

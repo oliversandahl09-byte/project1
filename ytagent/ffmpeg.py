@@ -17,7 +17,10 @@ class FFmpegError(RuntimeError):
 def require_ffmpeg() -> None:
     for tool in ("ffmpeg", "ffprobe"):
         if shutil.which(tool) is None:
-            raise FFmpegError(f"{tool} hittas inte. Installera ffmpeg (se README).")
+            raise FFmpegError(
+                f"{tool} hittas inte. Installera ffmpeg (Windows: winget install Gyan.FFmpeg, "
+                "Mac: brew install ffmpeg) och öppna sedan ett NYTT terminalfönster."
+            )
 
 
 def run(args: list[str], cwd: Path | None = None) -> None:

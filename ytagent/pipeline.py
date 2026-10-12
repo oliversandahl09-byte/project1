@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import history
+from . import ffmpeg, history
 from .brief import Brief, load_brief
 from .config import Settings
 from .editor import SegmentInput, render_short
@@ -62,6 +62,7 @@ class Pipeline:
         return channel_context(brief.text, style, learnings, titles, plan.as_prompt())
 
     def run(self, count: int | None = None, task: str = "", niche: str = "", upload: bool = True) -> RunResult:
+        ffmpeg.require_ffmpeg()  # fail fast, before spending money on Claude
         brief = load_brief(self.settings.brief_path)
         plan = make_plan(brief, history.load(self.settings.history_path), self.claude, task, niche, count)
         log.info("Plan: %d video(s), nisch '%s'%s", plan.count, plan.niche,
