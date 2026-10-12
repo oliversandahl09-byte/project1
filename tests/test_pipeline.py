@@ -97,6 +97,11 @@ def fake_clips(settings, queries, durations, out_dir):
 def test_full_run_without_upload(tmp_path: Path, monkeypatch):
     (tmp_path / "brief.md").write_text(BRIEF)
     settings = Settings(root=tmp_path, google_client_secret=tmp_path / "x", google_token=tmp_path / "y")
+    # A real font in assets/fonts exercises the fontsdir option of the caption filter.
+    settings.fonts_dir.mkdir(parents=True)
+    font = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
+    if font.exists():
+        (settings.fonts_dir / font.name).write_bytes(font.read_bytes())
     monkeypatch.setattr(pipeline, "synthesize_segments", fake_voice)
     monkeypatch.setattr(pipeline, "fetch_clips", fake_clips)
 

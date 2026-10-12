@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -109,6 +110,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return header + "\n".join(lines) + "\n"
 
 
+def filter_path(path: Path, cwd: Path) -> str:
+    """A path that is safe inside an ffmpeg filter string.
+
+    Windows paths break filter parsing (`C:` and backslashes are special), so use a
+    relative path with forward slashes, or escape the drive colon as a last resort.
+    """
+    try:
+        return Path(os.path.relpath(path.resolve(), cwd.resolve())).as_posix()
+    except ValueError:  # different drive on Windows
+        return path.resolve().as_posix().replace(":", "\\\\:")
+
+
 def _pick_music(music_dir: Path) -> Path | None:
     tracks = [p for p in music_dir.glob("*") if p.suffix.lower() in {".mp3", ".wav", ".m4a", ".ogg"}]
     return random.choice(tracks) if tracks else None
@@ -139,8 +152,8 @@ def render_short(segments: list[SegmentInput], work_dir: Path, out_path: Path,
     (work_dir / "captions.ass").write_text(build_ass(segments), encoding="utf-8")
     total = sum(s.duration for s in segments)
     ass = "ass=captions.ass"
-    if fonts_dir and fonts_dir.exists():
-        ass += f":fontsdir={fonts_dir.resolve()}"
+    if fonts_dir and any(p.suffix.lower() in {".ttf", ".otf"} for p in fonts_dir.glob("*")):
+        ass += f":fontsdir={filter_path(fonts_dir, work_dir)}"
 
     music = _pick_music(music_dir) if music_dir else None
     args = ["-i", "video.mp4", "-i", "voice.wav"]

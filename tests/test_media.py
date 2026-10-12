@@ -50,3 +50,14 @@ def test_missing_ffmpeg_fails_fast(monkeypatch, tmp_path):
     monkeypatch.setattr(ffmpeg.shutil, "which", lambda name: None)
     with pytest.raises(ffmpeg.FFmpegError, match="winget install"):
         pipeline.Pipeline(Settings(root=tmp_path), claude=object()).run()
+
+
+def test_filter_path_is_relative_and_parser_safe(tmp_path: Path):
+    from ytagent.editor import filter_path
+
+    fonts, work = tmp_path / "assets" / "fonts", tmp_path / "output" / "x" / "build"
+    fonts.mkdir(parents=True)
+    work.mkdir(parents=True)
+    result = filter_path(fonts, work)
+    assert result == "../../../assets/fonts"
+    assert ":" not in result and "\\" not in result
