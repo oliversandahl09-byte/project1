@@ -161,8 +161,14 @@ def cmd_schedule(settings: Settings, args) -> int:
 
 def link_video(settings: Settings, ref: str, youtube_id: str, now: datetime | None = None) -> dict:
     """Connect a video you uploaded yourself (e.g. while the API project awaits audit) to its history entry,
-    so analytics and learning can track it. `ref` is the output folder id, or the agent's own upload id."""
-    for item in history.load(settings.history_path):
+    so analytics and learning can track it. `ref` is the output folder id, the agent's own upload id,
+    or "senaste"/"latest" for the newest video that is not published yet."""
+    items = history.load(settings.history_path)
+    if ref.lower() in {"senaste", "latest"}:
+        unpublished = [i for i in items if i.get("status") != "published"]
+        items = sorted(unpublished, key=lambda i: i.get("created", ""))[-1:]
+        ref = items[0]["id"] if items else ref
+    for item in items:
         if ref in (item["id"], item.get("youtube_id")):
             item.update(youtube_id=youtube_id, status="published", upload_pending=False,
                         published_at=(now or datetime.now(timezone.utc)).isoformat())
@@ -218,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("schedule", help="Visa publiceringsschema")
     link = sub.add_parser("link", help="Koppla en video du laddat upp själv, så att agenten lär sig av den")
-    link.add_argument("ref", help="Mapp-id från `list` (eller agentens gamla video-id)")
+    link.add_argument("ref", help='"senaste" för den nyaste videon, eller mapp-id från `list`')
     link.add_argument("youtube_id", help="Id:t på videon du laddade upp, t.ex. AbC123xYz")
 
     sub.add_parser("list", help="Visa alla videos agenten gjort")

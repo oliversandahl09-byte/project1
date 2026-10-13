@@ -166,3 +166,15 @@ def test_link_manual_upload_makes_video_trackable(tmp_path: Path):
     item = link_video(settings, "LOCKED1", "MANUAL1", now=when)
     assert item["youtube_id"] == "MANUAL1" and item["status"] == "published"
     assert [i["youtube_id"] for i in analytics.eligible(history.load(settings.history_path), NOW)] == ["MANUAL1"]
+
+
+def test_link_latest(tmp_path: Path):
+    from ytagent.cli import link_video
+
+    settings = Settings(root=tmp_path)
+    history.upsert(settings.history_path, {"id": "old", "status": "published", "youtube_id": "X",
+                                           "created": "2026-10-01T10:00:00+00:00"})
+    history.upsert(settings.history_path, {"id": "a", "status": "rendered", "created": "2026-10-10T10:00:00+00:00"})
+    history.upsert(settings.history_path, {"id": "b", "status": "rendered", "created": "2026-10-12T10:00:00+00:00"})
+    assert link_video(settings, "senaste", "NEW")["id"] == "b"
+    assert link_video(settings, "senaste", "NEW2")["id"] == "a"
