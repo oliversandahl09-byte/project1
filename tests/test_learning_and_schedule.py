@@ -154,3 +154,15 @@ def test_failed_upload_can_be_retried(tmp_path, monkeypatch):
     p = pipeline.Pipeline(settings, claude=FakeClaude())
     done = p.upload(parse_brief(BRIEF), saved)
     assert done["youtube_id"] == "YT999" and not done["upload_pending"]
+
+
+def test_link_manual_upload_makes_video_trackable(tmp_path: Path):
+    from ytagent.cli import link_video
+
+    settings = Settings(root=tmp_path)
+    history.upsert(settings.history_path, {"id": "v1", "youtube_id": "LOCKED1", "status": "awaiting_approval",
+                                           "duration": 40, "title": "T"})
+    when = NOW - timedelta(days=3)
+    item = link_video(settings, "LOCKED1", "MANUAL1", now=when)
+    assert item["youtube_id"] == "MANUAL1" and item["status"] == "published"
+    assert [i["youtube_id"] for i in analytics.eligible(history.load(settings.history_path), NOW)] == ["MANUAL1"]

@@ -159,6 +159,25 @@ def cmd_schedule(settings: Settings, args) -> int:
     return 0
 
 
+def link_video(settings: Settings, ref: str, youtube_id: str, now: datetime | None = None) -> dict:
+    """Connect a video you uploaded yourself (e.g. while the API project awaits audit) to its history entry,
+    so analytics and learning can track it. `ref` is the output folder id, or the agent's own upload id."""
+    for item in history.load(settings.history_path):
+        if ref in (item["id"], item.get("youtube_id")):
+            item.update(youtube_id=youtube_id, status="published", upload_pending=False,
+                        published_at=(now or datetime.now(timezone.utc)).isoformat())
+            item.pop("publish_at", None)
+            history.upsert(settings.history_path, item)
+            return item
+    raise ValueError(f"Hittar ingen video '{ref}'. Kör `python -m ytagent list` för att se id:n.")
+
+
+def cmd_link(settings: Settings, args) -> int:
+    item = link_video(settings, args.ref, args.youtube_id)
+    print(f"Kopplad: {item.get('title')} -> https://youtu.be/{args.youtube_id}")
+    return 0
+
+
 def cmd_list(settings: Settings, args) -> int:
     for item in history.load(settings.history_path):
         stats = item.get("stats") or {}
@@ -198,13 +217,18 @@ def main(argv: list[str] | None = None) -> int:
     auto.add_argument("--niche")
 
     sub.add_parser("schedule", help="Visa publiceringsschema")
+    link = sub.add_parser("link", help="Koppla en video du laddat upp själv, så att agenten lär sig av den")
+    link.add_argument("ref", help="Mapp-id från `list` (eller agentens gamla video-id)")
+    link.add_argument("youtube_id", help="Id:t på videon du laddade upp, t.ex. AbC123xYz")
+
     sub.add_parser("list", help="Visa alla videos agenten gjort")
 
     args = parser.parse_args(argv)
     settings = load_settings()
     setup_logging(settings, args.verbose)
     handlers = {"auth": cmd_auth, "run": cmd_run, "upload": cmd_upload, "approve": cmd_approve,
-                "analyze": cmd_analyze, "auto": cmd_auto, "schedule": cmd_schedule, "list": cmd_list}
+                "analyze": cmd_analyze, "auto": cmd_auto, "schedule": cmd_schedule, "list": cmd_list,
+                "link": cmd_link}
     try:
         return handlers[args.command](settings, args)
     except Exception as e:
