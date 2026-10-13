@@ -18,8 +18,10 @@ Short sentences. No fake hype ("insane", "you won't believe").
 
 ## Niches
 
-### Deep ocean
-EXAMPLE, replace or delete: Surprising facts about the deep sea and the creatures that live there.
+### Psychology
+Why your brain does weird things: habits, emotions, memory, social situations and everyday moments teens recognize
+(school, friends, phones, sleep, motivation). Every Short gives one surprising, true, research-backed insight the
+viewer can use or share. No diagnosing, no medical advice, nothing that could make a vulnerable viewer feel worse.
 
 ## Avoid
 Fearmongering, unverified claims, dangerous challenges, politics, anything not suitable for teens.
