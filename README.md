@@ -9,6 +9,9 @@ brief.md / ditt uppdrag ─► plan (nisch, antal, stil) ─► idéer ─► ma
      style_guide.md + learnings.md + historik ◄──────────────── (steg 2: analytics) ◄──────────────────┘
 ```
 
+> Repot innehåller också **Klädagenten**, en hemsida som hittar second hand-kläder på Vinted,
+> Depop och Grailed: se [kladagent/README.md](kladagent/README.md).
+
 ## Status
 
 | Steg | Klart |

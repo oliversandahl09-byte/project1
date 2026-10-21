@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klädagenten</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◎</span>
+      <div>
+        <h1>Klädagenten</h1>
+        <p>Second hand från Vinted, Depop och Grailed</p>
+      </div>
+    </div>
+    <button id="new-chat" class="ghost" type="button">Ny sökning</button>
+  </header>
+
+  <main id="chat" class="chat" aria-live="polite">
+    <section id="welcome" class="welcome">
+      <h2>Vad letar du efter?</h2>
+      <p>Skriv exakt vad du vill ha, eller skicka bilder på outfits du gillar så hittar agenten liknande plagg.
+        Du kan sedan säga till, t.ex. <em>”billigare”</em> eller <em>”mer i svart”</em>.</p>
+      <div class="examples">
+        <button type="button" class="example">Brun Carhartt Detroit-jacka, storlek M, max 900 kr</button>
+        <button type="button" class="example">Baggy vintage-jeans i ljus tvätt, 90-talsstil</button>
+        <button type="button" class="example">Stickad tröja i gammal-pengar-stil, kräm eller marin</button>
+        <button type="button" class="example">Hitta plaggen i outfiten på bilden</button>
+      </div>
+    </section>
+  </main>
+
+  <form id="composer" class="composer" autocomplete="off">
+    <div id="drop-hint" class="drop-hint" hidden>Släpp bilderna här</div>
+    <div id="thumbs" class="thumbs"></div>
+    <div class="input-row">
+      <label class="attach" title="Lägg till bilder">
+        <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 12H5l3.5-4.5 2.5 3 3.5-4.5L19 17ZM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg>
+        <span class="sr">Lägg till bilder</span>
+      </label>
+      <textarea id="text" rows="1" placeholder="Beskriv plagget eller stilen…"></textarea>
+      <button id="send" class="send" type="submit" aria-label="Sök">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 20.5 21 12 3 3.5v6.7L15 12 3 13.8z"/></svg>
+      </button>
+    </div>
+    <details class="filters">
+      <summary>Filter</summary>
+      <div class="filter-grid">
+        <fieldset class="platforms">
+          <legend>Sajter</legend>
+          <label><input type="checkbox" name="platforms" value="vinted" checked> Vinted <small>({{ vinted_domain }})</small></label>
+          <label><input type="checkbox" name="platforms" value="depop" checked> Depop</label>
+          <label><input type="checkbox" name="platforms" value="grailed" checked> Grailed</label>
+        </fieldset>
+        <label>Maxpris ({{ currency }})<input id="max_price" type="number" min="0" step="50" inputmode="numeric" placeholder="Valfritt"></label>
+        <label>Storlek<input id="size" type="text" maxlength="40" placeholder="t.ex. M, W32, 43"></label>
+        <label>Avdelning
+          <select id="gender">
+            <option value="">Båda</option>
+            <option value="dam">Dam</option>
+            <option value="herr">Herr</option>
+          </select>
+        </label>
+      </div>
+    </details>
+  </form>
+
+  <template id="tpl-listing">
+    <a class="card" target="_blank" rel="noopener">
+      <div class="photo"><span class="platform"></span></div>
+      <div class="info">
+        <div class="row"><strong class="title"></strong><span class="price"></span></div>
+        <div class="meta"></div>
+        <p class="why"></p>
+      </div>
+    </a>
+  </template>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
