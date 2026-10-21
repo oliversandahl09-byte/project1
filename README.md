@@ -184,6 +184,62 @@ Windows: Schemaläggaren (Task Scheduler) → Skapa grundläggande uppgift → D
   För Shorts visar YouTube ofta en bildruta ur videon i Shorts-flödet; den egna thumbnailen syns främst i sök och på kanalsidan.
 - Undertexternas timing räknas från textlängd per segment, inte exakta ordtider. Ser bra ut i lugnt tempo.
 
+---
+
+# Fyndagent: kläder på Vinted, Depop och Grailed
+
+Skriv vad du letar efter med egna ord. Agenten gör om det till sökord, söker på alla tre sajterna,
+räknar om priser till kronor, sållar bort det som är för dyrt och låter Claude läsa annonserna
+(och titta på bilderna) och ranka vad som faktiskt matchar, med en kort motivering.
+
+```
+din önskan ─► Claude: sökplan (sökord, storlek, maxpris, märke, krav) ─► Vinted + Depop + Grailed
+          ─► pris i SEK, dubbletter bort ─► Claude rankar 0–10 med bilder ─► lista + HTML-sida med bilder
+```
+
+```bash
+python -m fyndagent search "svart Carhartt Detroit-jacka, stl M, max 900 kr"
+python -m fyndagent search "vintage Levis 501 W32 L32, ljus tvätt" --platforms vinted,depop
+python -m fyndagent search "Arc'teryx Beta LT herr L" --max-price 2500 --limit 5
+python -m fyndagent search "stone island tröja" --no-ai      # utan Claude: bara sökordet, ingen ranking
+```
+
+Varje sökning sparar `output/fynd/<datum>_<sökning>.html` (kort med bild, pris, poäng, motivering och länk)
+och samma sak som `.json`. Öppna HTML-filen i webbläsaren.
+
+### Bevakningar
+
+Lägg till `--watch` så sparas sökningen. Kör sedan `check` när du vill (eller via cron) så visas bara
+annonser som inte fanns förra gången. Annonser som redan bedömts skickas inte till Claude igen.
+
+```bash
+python -m fyndagent search "Salomon XT-6 stl 43, max 1200 kr" --watch
+python -m fyndagent check            # alla bevakningar, bara nya annonser
+python -m fyndagent watches          # lista
+python -m fyndagent unwatch 2        # ta bort
+# cron, var tredje timme: 0 */3 * * * cd /sökväg/till/project1 && .venv/bin/python -m fyndagent check >> logs/fynd.log 2>&1
+```
+
+### Inställningar (.env)
+
+Behöver bara `ANTHROPIC_API_KEY` (samma som YouTube-agenten). Valfritt: `FYND_CURRENCY`, `VINTED_DOMAIN`
+(t.ex. `www.vinted.de`), `DEPOP_COUNTRY`, `FYND_IMAGES=false` för att spara pengar, och växelkurserna
+`FX_USD`/`FX_EUR`/`FX_GBP` (Grailed visar priser i USD). En sökning kostar ungefär en krona med bilder,
+mindre med `--no-images` eller `CLAUDE_EFFORT=medium`.
+
+### Bra att veta
+
+- **Inga officiella API:er.** Vinted, Depop och Grailed har inga öppna sök-API:er, så agenten använder samma
+  JSON-anrop som deras egna webbsidor gör. De kan ändras eller blockeras utan förvarning. Om en sajt slutar
+  fungera skrivs det ut och de andra söks ändå. Använd det för eget bruk och sök i lugn takt
+  (agenten väntar mellan anropen); automatiserad hämtning kan stå i strid med sajternas villkor.
+- **Grailed** söker via Algolia med en publik söknyckel. Om Grailed ger HTTP 403: öppna grailed.com i Chrome,
+  F12 → Network, sök på något, klicka på anropet till `algolia.net` och kopiera `x-algolia-api-key`
+  till `GRAILED_ALGOLIA_KEY` i `.env`.
+- **Priser** är annonspriset utan frakt och köparskydd. Grailed-priser räknas om med en ungefärlig kurs.
+- Agenten köper eller kontaktar aldrig säljare, den hittar och rankar bara. Kolla äkthet själv innan du köper,
+  Claude flaggar misstänkta kopior men kan inte garantera något.
+
 ## Tester
 
 ```bash
@@ -191,3 +247,4 @@ python -m pytest -q
 ```
 
 Testerna kör hela flödet med låtsas-Claude, -röst och -film, men riktig ffmpeg-redigering och riktiga thumbnails.
+Fyndagentens tester använder låtsas-svar från sajterna och kör utan nätverk.

@@ -26,8 +26,9 @@ class Claude:
         self.settings = settings
         self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key, max_retries=3)
 
-    def structured(self, system: str, prompt: str, schema: type[T], images: list[Path] | None = None) -> T:
-        content: list[dict] = []
+    def structured(self, system: str, prompt: str, schema: type[T], images: list[Path] | None = None,
+                   content_before: list[dict] | None = None) -> T:
+        content: list[dict] = list(content_before or [])
         for img in images or []:
             content.append({
                 "type": "image",
