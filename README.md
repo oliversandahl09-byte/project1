@@ -184,6 +184,65 @@ Windows: Schemaläggaren (Task Scheduler) → Skapa grundläggande uppgift → D
   För Shorts visar YouTube ofta en bildruta ur videon i Shorts-flödet; den egna thumbnailen syns främst i sök och på kanalsidan.
 - Undertexternas timing räknas från textlängd per segment, inte exakta ordtider. Ser bra ut i lugnt tempo.
 
+## Clipper: YouTube-länk → höjdpunkter → TikTok
+
+En webbapp i samma projekt. Klistra in en YouTube-länk så hittar appen höjdpunkterna, du justerar
+klippen och skickar dem till TikTok.
+
+```bash
+python -m clipper            # öppnar http://localhost:8000 i webbläsaren
+```
+
+```
+YouTube-länk ─► yt-dlp hämtar video + undertexter ─► ordtider (YouTube-text, annars Whisper)
+   ─► Claude väljer höjdpunkter (annars ljudnivå) ─► du redigerar ─► 1080×1920-klipp ─► TikTok
+```
+
+**Så funkar det**
+
+1. Klistra in länken, välj hur många klipp och hur långa (standard 6 st, 15–60 s).
+2. Appen hämtar videon och läser vad som sägs. Med `ANTHROPIC_API_KEY` väljer Claude ut stunderna som
+   funkar som egna klipp (krok i början, avslutad tanke) och skriver rubrik och TikTok-text med hashtags.
+   Utan nyckel väljs de högsta och livligaste partierna utifrån ljudet.
+3. Varje förslag får ett redigeringskort:
+   - spela upp klippet, flytta start/slut (skriv tid eller tryck **⌖ här** vid spelarens position)
+   - rubrik i bild, TikTok-text, undertexter av/på, tempo (0,75–1,5×)
+   - format: **hela bilden med suddig bakgrund** eller **fyll skärmen** (välj vilken del som syns med reglaget)
+   - **+ Nytt klipp härifrån** gör ett eget klipp från valfritt ställe i videon
+4. **Rendera klipp** gör en vertikal 1080×1920-video med ord-för-ord-undertexter (ordet som sägs blir gult),
+   ljudet normaliserat till −14 LUFS. Ladda ner den, eller **Skicka till TikTok**.
+
+Allt sparas i `output/clips/<jobb>/` (originalvideo, `words.json`, `job.json`, färdiga klipp i `clips/`).
+
+**Transkript:** YouTubes egna eller automatiska undertexter används först (gratis, med ordtider).
+Saknas de används OpenAI Whisper om `OPENAI_API_KEY` finns (ca 0,06 kr/min). Utan transkript blir det
+inga undertexter, men klippen går att göra ändå.
+
+### TikTok-uppkoppling
+
+Nedladdning + manuell uppladdning i TikTok-appen fungerar alltid. För att skicka direkt från appen:
+
+1. Gå till https://developers.tiktok.com, logga in och skapa en app (**Manage apps → Connect an app**).
+2. Lägg till produkterna **Login Kit** och **Content Posting API**.
+3. Scopes: `user.info.basic` och `video.upload` (för direktpublicering även `video.publish`).
+4. Redirect URI: `http://localhost:8000/tiktok/callback` (välj plattform *Desktop* om *Web* kräver https).
+5. Lägg in **Client key** och **Client secret** i `.env` (`TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`).
+6. Starta om `python -m clipper` och tryck **Logga in på TikTok** uppe till höger.
+   Inloggningen sparas i `secrets/tiktok_token.json` och förnyas automatiskt.
+
+Lägen (`TIKTOK_MODE`):
+
+- `inbox` (standard): klippet hamnar som utkast i TikTok-appen (du får en notis). Där lägger du till
+  musik/trendljud och publicerar. Fungerar innan TikTok har granskat din app.
+- `direct`: publiceras direkt med texten från appen. Tills TikTok har granskat appen (audit) får inlägg
+  bara vara privata (`TIKTOK_PRIVACY=SELF_ONLY`).
+
+### Upphovsrätt
+
+Klipp bara videor du har rätt att använda: dina egna, eller där upphovspersonen gett lov. TikTok tar bort
+inlägg och kan stänga konton som laddar upp andras material utan tillåtelse, och YouTubes villkor förbjuder
+nedladdning utan tillstånd från den som äger videon.
+
 ## Tester
 
 ```bash
@@ -191,3 +250,4 @@ python -m pytest -q
 ```
 
 Testerna kör hela flödet med låtsas-Claude, -röst och -film, men riktig ffmpeg-redigering och riktiga thumbnails.
+Clipper-testerna kör webbappen med en genererad testvideo i stället för YouTube och låtsas-TikTok.

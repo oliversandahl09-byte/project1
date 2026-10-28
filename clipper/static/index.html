@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clipper</title>
+<style>
+  :root {
+    --bg: #0e0f12; --panel: #17191e; --panel2: #1f2229; --line: #2b2f38;
+    --text: #e9eaee; --muted: #9aa0ab; --accent: #fe2c55; --accent2: #25f4ee; --ok: #3ccf7a; --warn: #f5b94a;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 20px; margin: 0; letter-spacing: .3px; }
+  header h1 span { color: var(--accent); }
+  #tiktok { margin-left: auto; font-size: 13px; color: var(--muted); }
+  main { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 57px); }
+  aside { border-right: 1px solid var(--line); padding: 14px; overflow: auto; }
+  aside h3 { font-size: 12px; text-transform: uppercase; color: var(--muted); margin: 6px 0 10px; letter-spacing: .6px; }
+  .jobitem { display: block; padding: 8px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; color: var(--text); text-decoration: none; }
+  .jobitem:hover, .jobitem.active { background: var(--panel2); }
+  .jobitem small { display: block; color: var(--muted); font-size: 12px; }
+  section { padding: 20px; overflow: auto; }
+  form.new { display: flex; gap: 8px; flex-wrap: wrap; background: var(--panel); padding: 14px; border-radius: 12px; border: 1px solid var(--line); }
+  input, textarea, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; }
+  input[type=url] { flex: 1 1 320px; }
+  input[type=number] { width: 80px; }
+  textarea { width: 100%; resize: vertical; min-height: 64px; }
+  label { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  button, .btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; text-decoration: none; display: inline-block; }
+  button:hover, .btn:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.tiktok { background: #000; border-color: var(--accent2); }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { margin: 16px 0; color: var(--muted); }
+  .status.failed { color: var(--accent); }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--muted); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 6px; vertical-align: -1px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .source { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 18px; }
+  .source video { width: 100%; max-height: 360px; background: #000; border-radius: 8px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 16px; }
+  .clip { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; grid-template-columns: 1fr 200px; gap: 14px; }
+  .clip h4 { margin: 0 0 4px; font-size: 16px; }
+  .clip .why { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .clip video.src { width: 100%; max-height: 300px; border-radius: 8px; background: #000; }
+  .clip .out { display: flex; flex-direction: column; gap: 8px; }
+  .clip .out video { width: 100%; aspect-ratio: 9/16; background: #000; border-radius: 10px; }
+  .clip .placeholder { width: 100%; aspect-ratio: 9/16; border-radius: 10px; border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 10px; }
+  .times { display: grid; grid-template-columns: auto minmax(70px, 1fr) auto auto minmax(70px, 1fr) auto; gap: 6px; align-items: center; margin-top: 8px; }
+  .times input { width: 100%; }
+  .score { background: var(--panel2); border-radius: 999px; padding: 2px 8px; font-size: 12px; color: var(--warn); margin-left: 6px; }
+  .transcript { font-size: 13px; color: var(--muted); background: var(--panel2); border-radius: 8px; padding: 8px; max-height: 90px; overflow: auto; margin-top: 8px; }
+  .err { color: var(--accent); font-size: 13px; }
+  .okmsg { color: var(--ok); font-size: 13px; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: 180px; }
+    .clips { grid-template-columns: 1fr; }
+    .clip { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Clip<span>per</span></h1>
+  <span style="color:var(--muted);font-size:13px">YouTube in → TikTok-klipp ut</span>
+  <div id="tiktok"></div>
+</header>
+<main>
+  <aside>
+    <h3>Tidigare videor</h3>
+    <div id="jobs"></div>
+  </aside>
+  <section>
+    <form class="new" id="newform">
+      <input type="url" id="url" placeholder="Klistra in YouTube-länk, t.ex. https://www.youtube.com/watch?v=…" required>
+      <label>Antal <input type="number" id="count" value="6" min="1" max="15"></label>
+      <label>Längd <input type="number" id="minlen" value="15" min="5" max="120">–<input type="number" id="maxlen" value="60" min="10" max="180"> s</label>
+      <button class="primary" type="submit">Hitta höjdpunkter</button>
+    </form>
+    <div id="view"><div class="empty">Klistra in en länk ovan för att börja.</div></div>
+  </section>
+</main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = (t % 60).toFixed(1); return `${m}:${s.padStart(4, "0")}`; };
+const parseTime = v => { v = String(v).trim(); if (v.includes(":")) { const [m, s] = v.split(":"); return (+m) * 60 + (+s); } return +v; };
+
+let current = null, pollTimer = null, tiktokState = {};
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const body = r.headers.get("content-type")?.includes("json") ? await r.json() : await r.text();
+  if (!r.ok) throw new Error(body.detail || body || r.statusText);
+  return body;
+}
+
+async function loadJobs() {
+  const jobs = await api("/api/jobs");
+  $("#jobs").innerHTML = jobs.length ? jobs.map(j => `
+    <a class="jobitem ${current === j.id ? "active" : ""}" href="#${j.id}">
+      ${esc(j.title || j.url)}<small>${esc(j.status === "ready" ? j.clips + " klipp" : j.status)} · ${esc(j.created.slice(0, 16).replace("T", " "))}</small>
+    </a>`).join("") : `<small style="color:var(--muted)">Inga än</small>`;
+}
+
+async function loadTikTok() {
+  tiktokState = await api("/api/tiktok");
+  const el = $("#tiktok");
+  if (!tiktokState.configured) el.innerHTML = `TikTok: inte konfigurerat (se README)`;
+  else if (!tiktokState.logged_in) el.innerHTML = `<a class="btn" href="/tiktok/login">Logga in på TikTok</a>`;
+  else el.innerHTML = `TikTok: inloggad · läge <b>${tiktokState.mode === "direct" ? "publicera direkt" : "utkast i appen"}</b>`;
+}
+
+$("#newform").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    const job = await api("/api/jobs", { method: "POST", body: JSON.stringify({
+      url: $("#url").value, count: +$("#count").value, min_len: +$("#minlen").value, max_len: +$("#maxlen").value }) });
+    $("#url").value = "";
+    location.hash = job.id;
+  } catch (err) { alert(err.message); }
+});
+
+window.addEventListener("hashchange", () => openJob(location.hash.slice(1)));
+
+async function openJob(id) {
+  clearTimeout(pollTimer);
+  current = id || null;
+  loadJobs();
+  if (!id) { $("#view").innerHTML = `<div class="empty">Klistra in en länk ovan för att börja.</div>`; return; }
+  let job;
+  try { job = await api(`/api/jobs/${id}`); } catch (e) { $("#view").innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (job.status !== "ready") {
+    $("#view").innerHTML = `<div class="status ${job.status === "failed" ? "failed" : ""}">
+      ${job.status === "failed" ? "Fel: " : `<span class="spinner"></span>`}${esc(job.message || job.status)}</div>`;
+    if (job.status !== "failed") pollTimer = setTimeout(() => openJob(id), 2000);
+    return;
+  }
+  renderJob(job);
+}
+
+function renderJob(job) {
+  const src = `/media/${job.id}/${job.source}`;
+  const method = job.highlight_method === "claude" ? "valda av Claude utifrån vad som sägs" : "valda utifrån ljudnivå (lägg in ANTHROPIC_API_KEY för smartare val)";
+  $("#view").innerHTML = `
+    <div class="status">${esc(job.title)} · ${fmt(job.duration)} · ${job.clips.length} klipp, ${method}.
+      Transkript: ${{ youtube: "YouTubes undertexter", whisper: "Whisper", none: "saknas (inga undertexter i klippen)" }[job.transcript_source] || "–"}</div>
+    <div class="source">
+      <video id="srcplayer" src="${src}" controls preload="metadata"></video>
+      <div class="row">
+        <button id="addclip">+ Nytt klipp härifrån (30 s)</button>
+        <a class="btn" href="${esc(job.url)}" target="_blank" rel="noopener">Öppna på YouTube</a>
+      </div>
+    </div>
+    <div class="clips">${job.clips.map(c => clipCard(job, c)).join("") || `<div class="empty">Inga klipp. Lägg till ett eget ovan.</div>`}</div>`;
+  $("#addclip").onclick = async () => {
+    const t = $("#srcplayer").currentTime;
+    await api(`/api/jobs/${job.id}/clips`, { method: "POST", body: JSON.stringify({ start: t, end: Math.min(t + 30, job.duration) }) });
+    openJob(job.id);
+  };
+  for (const c of job.clips) wireClip(job, c);
+  if (job.clips.some(c => c.status === "rendering")) pollTimer = setTimeout(() => refresh(job.id), 2500);
+}
+
+async function refresh(id) {
+  // Uppdatera bara klippen som ändrat status, så att det man skriver inte försvinner.
+  const job = await api(`/api/jobs/${id}`);
+  for (const c of job.clips) {
+    const card = document.getElementById(`clip-${c.id}`);
+    if (card && card.dataset.status !== c.status) {
+      card.querySelector(".out").outerHTML = outPanel(job, c);
+      card.dataset.status = c.status;
+      wireOut(job, c);
+    }
+  }
+  if (job.clips.some(c => c.status === "rendering")) pollTimer = setTimeout(() => refresh(id), 2500);
+}
+
+function clipCard(job, c) {
+  const e = c.edit, h = c.highlight;
+  return `<div class="clip" id="clip-${c.id}" data-status="${c.status}">
+    <div>
+      <h4>${esc(h.title || "Eget klipp")}${h.score ? `<span class="score">★ ${h.score}/10</span>` : ""}</h4>
+      <div class="why">${esc(h.reason)}</div>
+      <video class="src" src="/media/${job.id}/${job.source}#t=${e.start},${e.end}" preload="metadata" controls></video>
+      <div class="times">
+        <span>Start</span><input name="start" value="${fmt(e.start)}"><button data-set="start" title="Sätt till spelarens position">⌖ här</button>
+        <span>Slut</span><input name="end" value="${fmt(e.end)}"><button data-set="end" title="Sätt till spelarens position">⌖ här</button>
+      </div>
+      <div class="row"><button data-play>▶ Spela klippet</button><span class="len" style="color:var(--muted);font-size:13px"></span></div>
+      <div class="transcript"></div>
+      <div class="row"><label style="flex:1">Rubrik i bild <input name="title" value="${esc(e.title)}" style="flex:1"></label></div>
+      <div class="row" style="display:block"><label>TikTok-text och hashtags</label><textarea name="caption">${esc(e.caption)}</textarea></div>
+      <div class="row">
+        <label>Format <select name="layout">
+          <option value="blur" ${e.layout === "blur" ? "selected" : ""}>Hela bilden + suddig bakgrund</option>
+          <option value="crop" ${e.layout === "crop" ? "selected" : ""}>Fyll skärmen (beskär)</option></select></label>
+        <label class="cropx" ${e.layout === "crop" ? "" : "hidden"}>Vänster <input type="range" name="crop_x" min="0" max="1" step="0.05" value="${e.crop_x}"> höger</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" name="show_captions" ${e.show_captions ? "checked" : ""}> Undertexter</label>
+        <label><input type="checkbox" name="show_title" ${e.show_title ? "checked" : ""}> Rubrik</label>
+        <label>Tempo <select name="speed">${[0.75, 1, 1.1, 1.25, 1.5].map(s => `<option value="${s}" ${+e.speed === s ? "selected" : ""}>${s}×</option>`).join("")}</select></label>
+      </div>
+      <div class="row">
+        <button class="primary" data-render>Rendera klipp</button>
+        <button data-delete>Ta bort</button>
+        <span class="msg"></span>
+      </div>
+    </div>
+    ${outPanel(job, c)}
+  </div>`;
+}
+
+function outPanel(job, c) {
+  if (c.status === "rendering") return `<div class="out"><div class="placeholder"><span><span class="spinner"></span>Renderar…</span></div></div>`;
+  if (c.status === "failed") return `<div class="out"><div class="placeholder err">${esc(c.error)}</div></div>`;
+  if (!c.file) return `<div class="out"><div class="placeholder">Ändra start/slut och text, tryck sedan Rendera för att se TikTok-versionen här.</div></div>`;
+  const url = `/media/${job.id}/${c.file}?v=${Date.now()}`;
+  const tt = !tiktokState.configured ? "" : !tiktokState.logged_in
+    ? `<a class="btn" href="/tiktok/login">Logga in på TikTok</a>`
+    : `<button class="tiktok" data-tiktok>${c.tiktok_publish_id ? "Skicka igen" : "Skicka till TikTok"}</button>`;
+  const st = c.tiktok_publish_id ? `<span class="okmsg" data-ttstatus>TikTok: ${esc(c.tiktok_status || "skickat")}</span>` : "";
+  return `<div class="out">
+    <video src="${url}" controls preload="metadata"></video>
+    <a class="btn" href="${url}" download>⬇ Ladda ner</a>
+    <button data-copy>Kopiera TikTok-text</button>
+    ${tt} ${st}
+  </div>`;
+}
+
+function readEdit(card) {
+  const v = n => card.querySelector(`[name=${n}]`);
+  return {
+    start: parseTime(v("start").value), end: parseTime(v("end").value),
+    title: v("title").value, caption: v("caption").value,
+    layout: v("layout").value, crop_x: +v("crop_x").value,
+    show_title: v("show_title").checked, show_captions: v("show_captions").checked,
+    speed: +v("speed").value,
+  };
+}
+
+function wireClip(job, c) {
+  const card = document.getElementById(`clip-${c.id}`);
+  const player = card.querySelector("video.src");
+  const msg = card.querySelector(".msg");
+  let stopAt = null;
+
+  const updateInfo = async () => {
+    const e = readEdit(card);
+    card.querySelector(".len").textContent = isFinite(e.end - e.start) ? `${((e.end - e.start) / e.speed).toFixed(1)} s` : "";
+    try {
+      const { text } = await api(`/api/jobs/${job.id}/text?start=${e.start}&end=${e.end}`);
+      card.querySelector(".transcript").textContent = text || "(inget transkript för den här delen)";
+    } catch {}
+  };
+  card.querySelectorAll("[name=start],[name=end],[name=speed]").forEach(i => i.addEventListener("change", updateInfo));
+  updateInfo();
+
+  card.querySelectorAll("[data-set]").forEach(b => b.onclick = () => {
+    card.querySelector(`[name=${b.dataset.set}]`).value = fmt(player.currentTime);
+    updateInfo();
+  });
+  card.querySelector("[data-play]").onclick = () => {
+    const e = readEdit(card);
+    player.currentTime = e.start; stopAt = e.end; player.playbackRate = e.speed; player.play();
+  };
+  player.addEventListener("timeupdate", () => { if (stopAt && player.currentTime >= stopAt) { player.pause(); stopAt = null; } });
+  card.querySelector("[name=layout]").onchange = ev => { card.querySelector(".cropx").hidden = ev.target.value !== "crop"; };
+
+  card.querySelector("[data-render]").onclick = async () => {
+    msg.textContent = ""; msg.className = "msg";
+    try {
+      await api(`/api/jobs/${job.id}/clips/${c.id}/render`, { method: "POST", body: JSON.stringify(readEdit(card)) });
+      clearTimeout(pollTimer); refresh(job.id);
+    } catch (err) { msg.textContent = err.message; msg.className = "msg err"; }
+  };
+  card.querySelector("[data-delete]").onclick = async () => {
+    if (!confirm("Ta bort klippet?")) return;
+    await api(`/api/jobs/${job.id}/clips/${c.id}`, { method: "DELETE" });
+    card.remove();
+  };
+  wireOut(job, c);
+}
+
+function wireOut(job, c) {
+  const card = document.getElementById(`clip-${c.id}`);
+  const copy = card.querySelector("[data-copy]");
+  if (copy) copy.onclick = async () => {
+    await navigator.clipboard.writeText(card.querySelector("[name=caption]").value);
+    copy.textContent = "Kopierat ✓"; setTimeout(() => copy.textContent = "Kopiera TikTok-text", 1500);
+  };
+  const tt = card.querySelector("[data-tiktok]");
+  if (tt) tt.onclick = async () => {
+    tt.disabled = true; tt.textContent = "Laddar upp…";
+    try {
+      await api(`/api/jobs/${job.id}/clips/${c.id}/tiktok`, { method: "POST" });
+      tt.textContent = tiktokState.mode === "direct" ? "Publicerat ✓" : "Skickat ✓ öppna TikTok-appen";
+      pollTikTok(job.id, c.id, card, 0);
+    } catch (err) { tt.disabled = false; tt.textContent = "Skicka till TikTok"; alert(err.message); }
+  };
+}
+
+async function pollTikTok(jobId, clipId, card, n) {
+  try {
+    const { status } = await api(`/api/jobs/${jobId}/clips/${clipId}/tiktok`);
+    let el = card.querySelector("[data-ttstatus]");
+    if (!el) { el = document.createElement("span"); el.className = "okmsg"; el.dataset.ttstatus = ""; card.querySelector(".out").append(el); }
+    el.textContent = `TikTok: ${status}`;
+    if (status.startsWith("PROCESSING") && n < 20) setTimeout(() => pollTikTok(jobId, clipId, card, n + 1), 3000);
+  } catch {}
+}
+
+loadTikTok().catch(() => {});
+openJob(location.hash.slice(1));
+</script>
+</body>
+</html>
