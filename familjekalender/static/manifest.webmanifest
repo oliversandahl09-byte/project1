@@ -1,0 +1,12 @@
+{
+  "name": "Familjekalender",
+  "short_name": "Kalender",
+  "lang": "sv",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#1f6f5c",
+  "icons": [
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

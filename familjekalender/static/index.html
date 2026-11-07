@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Familjekalender</title>
+  <meta name="theme-color" content="#1f6f5c">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kalender">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Familjekalender</h1>
+    <button id="refresh-btn" class="icon-btn" title="Hämta nytt från kalendrarna" aria-label="Uppdatera">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    </button>
+  </header>
+
+  <div id="filters" class="filters" aria-label="Visa personer"></div>
+
+  <main>
+    <!-- Kommande -->
+    <section id="view-agenda" class="view" hidden>
+      <div id="agenda-list"></div>
+      <button id="agenda-more" class="btn ghost wide">Visa fler veckor</button>
+    </section>
+
+    <!-- Månad -->
+    <section id="view-month" class="view" hidden>
+      <div class="month-nav">
+        <button class="icon-btn" data-month-step="-1" aria-label="Föregående månad">‹</button>
+        <h2 id="month-title"></h2>
+        <button class="icon-btn" data-month-step="1" aria-label="Nästa månad">›</button>
+        <button class="btn small ghost" id="month-today">Idag</button>
+      </div>
+      <div id="month-grid" class="month-grid"></div>
+      <div id="month-day" class="day-detail"></div>
+    </section>
+
+    <!-- Schema -->
+    <section id="view-schedule" class="view" hidden>
+      <div id="schedule-empty" class="empty" hidden>
+        <p>Lägg först till familjemedlemmar under <b>Inställningar</b>.</p>
+      </div>
+      <div id="schedule-main">
+        <div class="row">
+          <label>Schema för
+            <select id="schedule-member"></select>
+          </label>
+        </div>
+
+        <p class="hint" id="schedule-hint">Välj ett pass nedan och tryck på dagarna i kalendern. Tryck igen för att ta bort.</p>
+        <div id="palette" class="palette"></div>
+
+        <div class="month-nav">
+          <button class="icon-btn" data-sched-step="-1" aria-label="Föregående månad">‹</button>
+          <h2 id="sched-title"></h2>
+          <button class="icon-btn" data-sched-step="1" aria-label="Nästa månad">›</button>
+        </div>
+        <div id="sched-grid" class="month-grid sched"></div>
+        <p id="sched-summary" class="summary"></p>
+
+        <details class="card">
+          <summary>Upprepa ett rullande schema</summary>
+          <p class="hint">Har schemat ett mönster som upprepas (t.ex. var 3:e vecka)? Lägg in de första veckorna ovan och kopiera dem framåt. Pass som redan finns efter mönstret skrivs över.</p>
+          <form id="repeat-form" class="form-grid">
+            <label>Mönstret börjar (måndag)<input type="date" name="start" required></label>
+            <label>Längd i veckor<input type="number" name="weeks" min="1" max="52" value="3" required></label>
+            <label>Upprepa till och med<input type="date" name="until" required></label>
+            <button class="btn" type="submit">Upprepa</button>
+          </form>
+        </details>
+
+        <details class="card">
+          <summary>Passtyper</summary>
+          <ul id="shift-type-list" class="list"></ul>
+          <button id="shift-defaults" class="btn ghost" type="button">Lägg till vanliga pass (dag, kväll, natt)</button>
+          <form id="shift-type-form" class="form-grid">
+            <label>Namn<input name="name" placeholder="t.ex. Dag" required maxlength="40"></label>
+            <label>Kort<input name="short" placeholder="D" maxlength="4"></label>
+            <label>Börjar<input type="time" name="start_time"></label>
+            <label>Slutar<input type="time" name="end_time"></label>
+            <label>Färg<input type="color" name="color" value="#0d9488"></label>
+            <button class="btn" type="submit">Lägg till pass</button>
+          </form>
+          <p class="hint">Lämna tiderna tomma för heldag (t.ex. semester eller utbildning). Slutar passet före det börjar räknas det som ett nattpass över midnatt.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Inställningar -->
+    <section id="view-settings" class="view" hidden>
+      <div class="card">
+        <h2>Familjen</h2>
+        <ul id="member-list" class="list"></ul>
+        <form id="member-form" class="inline-form">
+          <input name="name" placeholder="Namn" required maxlength="60" aria-label="Namn">
+          <input type="color" name="color" value="#2563eb" aria-label="Färg">
+          <button class="btn" type="submit">Lägg till</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Kalendrar</h2>
+        <ul id="calendar-list" class="list"></ul>
+
+        <h3>Lägg till kalender via länk</h3>
+        <form id="calendar-form" class="form-grid">
+          <label class="span2">Länk (webcal:// eller https://…)
+            <input name="url" required placeholder="webcal://…" inputmode="url" autocomplete="off">
+          </label>
+          <label>Namn<input name="name" placeholder="t.ex. Wilmas fotboll" maxlength="100"></label>
+          <label>Vems?<select name="member_id" class="member-select"></select></label>
+          <label>Egen färg<input type="color" name="color" value="#f59e0b"></label>
+          <label class="check"><input type="checkbox" name="use_color"> Använd egen färg</label>
+          <button class="btn span2" type="submit">Lägg till</button>
+        </form>
+
+        <details>
+          <summary>Var hittar jag länken?</summary>
+          <div class="help">
+            <p><b>laget.se:</b> gå till lagets sida → <i>Kalender</i> → leta efter <i>Prenumerera</i> / <i>Exportera kalender</i> (iCal). Kopiera länken (högerklicka eller håll inne på knappen → <i>Kopiera länk</i>) och klistra in här.</p>
+            <p><b>Förbund och serier</b> (t.ex. fotboll, innebandy, handboll, hockey, basket): på lagets eller seriens matchsida finns ofta en knapp som heter <i>Prenumerera</i>, <i>Lägg till i kalender</i>, <i>iCal</i> eller en kalenderikon. Kopiera länken bakom den.</p>
+            <p><b>Arbetsschema:</b> många schemasystem (t.ex. i vården) kan exportera schemat som iCal-länk. Annars lägger du in passen själv under <b>Schema</b>.</p>
+            <p>Länken ska börja med <code>webcal://</code> eller <code>https://</code> och ofta innehålla <code>ical</code> eller sluta på <code>.ics</code>. Kalendrarna hämtas automatiskt igen var tredje timme.</p>
+          </div>
+        </details>
+
+        <h3>…eller ladda upp en .ics-fil</h3>
+        <form id="upload-form" class="inline-form">
+          <input type="file" name="file" accept=".ics,text/calendar" required>
+          <select name="member_id" class="member-select" aria-label="Vems?"></select>
+          <button class="btn" type="submit">Ladda upp</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Prenumerera i mobilen</h2>
+        <p class="hint">Lägg till familjekalendern i telefonens vanliga kalender (iPhone: Inställningar → Kalender → Konton → Lägg till konto → Annat → Lägg till prenumererad kalender. Google Kalender: Andra kalendrar → Från webbadress). Datorn som kör appen måste vara igång och nåbar.</p>
+        <ul id="feed-list" class="list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-view="agenda"><span class="tab-ico">☰</span>Kommande</button>
+    <button data-view="month"><span class="tab-ico">▦</span>Månad</button>
+    <button data-view="schedule"><span class="tab-ico">⏱</span>Schema</button>
+    <button data-view="settings"><span class="tab-ico">⚙</span>Inställningar</button>
+  </nav>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true">
+      <button class="icon-btn sheet-close" aria-label="Stäng">✕</button>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
