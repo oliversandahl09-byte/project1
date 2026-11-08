@@ -1,7 +1,5 @@
 # YouTube Shorts-agent
 
-> Repot innehåller också **[Familjekalender](familjekalender/README.md)** – en app för familjens lagkalendrar och arbetsscheman.
-
 En AI-agent som gör YouTube Shorts från början till slut: idé, manus, röst, stockfilm,
 redigering, titel- och thumbnailvarianter, beskrivning, taggar och uppladdning.
 
