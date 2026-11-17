@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atelier Fashion UF – Trendiga märkeskläder till bra priser</title>
+  <meta name="description" content="Atelier Fashion UF säljer äkta, kontrollerade märkeskläder till bra priser. Tröjor, skor, jeans och jackor för killar 15–25 år. UF-företag från Kungsmadskolan, Växjö.">
+  <meta name="theme-color" content="#161514">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #161514;
+      --ink-2: #1f1e1c;
+      --ink-3: #2a2826;
+      --line: rgba(255, 255, 255, .09);
+      --cream: #f4efe6;
+      --sand: #d6c7a1;
+      --sand-2: #b3a37f;
+      --gold: #b9944f;
+      --gold-soft: #d2b27a;
+      --muted: rgba(244, 239, 230, .62);
+      --radius: 4px;
+      --wrap: 1180px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Poppins", system-ui, sans-serif;
+      font-weight: 300;
+      background: var(--ink);
+      color: var(--cream);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    h1, h2, h3 { font-weight: 300; line-height: 1.15; letter-spacing: -.01em; }
+    h2 { font-size: clamp(30px, 4.2vw, 48px); margin-top: 14px; }
+    h3 { font-size: 18px; font-weight: 500; }
+    .lead { font-size: 17px; color: var(--muted); max-width: 560px; }
+    .gold { color: var(--gold); }
+
+    section { padding: 120px 0; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 15px 28px;
+      font-size: 12px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+      border: 1px solid var(--gold);
+      border-radius: var(--radius);
+      transition: background .25s, color .25s, border-color .25s;
+    }
+    .btn-solid { background: var(--gold); color: var(--ink); }
+    .btn-solid:hover { background: var(--gold-soft); border-color: var(--gold-soft); }
+    .btn-ghost { color: var(--cream); border-color: rgba(244,239,230,.3); }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Header */
+    header {
+      position: fixed; inset: 0 0 auto 0; z-index: 50;
+      transition: background .3s, border-color .3s;
+      border-bottom: 1px solid transparent;
+    }
+    header.scrolled { background: rgba(22, 21, 20, .92); backdrop-filter: blur(12px); border-color: var(--line); }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+    .logo { font-size: 15px; font-weight: 400; letter-spacing: .34em; text-transform: uppercase; }
+    .logo b { font-weight: 600; color: var(--gold); letter-spacing: .2em; }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--cream); }
+    .menu-btn { display: none; background: none; border: 0; color: var(--cream); cursor: pointer; padding: 8px; }
+    .menu-btn span { display: block; width: 22px; height: 1px; background: currentColor; margin: 6px 0; transition: transform .3s, opacity .3s; }
+
+    /* Hero */
+    .hero {
+      min-height: 100svh;
+      display: flex; align-items: center;
+      padding: 140px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(60% 50% at 75% 40%, rgba(185,148,79,.13), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 64px; align-items: center; position: relative; }
+    .hero h1 {
+      font-size: clamp(46px, 8vw, 104px);
+      font-weight: 200;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      line-height: 1.02;
+      margin: 22px 0 28px;
+    }
+    .hero h1 .uf { font-weight: 600; color: var(--gold); letter-spacing: .04em; }
+    .hero .lead { margin-bottom: 40px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+    .values {
+      display: flex; gap: 22px; margin-top: 56px;
+      font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted);
+    }
+    .values span::after { content: "·"; margin-left: 22px; color: var(--gold); }
+    .values span:last-child::after { content: none; }
+
+    .seal-frame {
+      aspect-ratio: 4 / 5;
+      border: 1px solid rgba(185,148,79,.45);
+      padding: 14px;
+    }
+    .seal-inner {
+      height: 100%;
+      border: 1px solid var(--line);
+      background: linear-gradient(160deg, var(--ink-2), var(--ink));
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px;
+    }
+    .seal {
+      width: 62%; aspect-ratio: 1; border-radius: 50%;
+      border: 1px solid var(--gold);
+      background: radial-gradient(circle at 40% 35%, #2b2927, #0e0d0d 70%);
+      box-shadow: 0 0 0 8px #0e0d0d, 0 0 0 9px rgba(185,148,79,.6), 0 30px 60px rgba(0,0,0,.5);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .seal strong {
+      font-size: clamp(20px, 2.6vw, 30px); font-weight: 600; letter-spacing: .06em;
+      background: linear-gradient(180deg, #e3c88f, #a5803f);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .seal small { font-size: clamp(11px, 1.3vw, 15px); letter-spacing: .22em; color: #cfc7b8; font-weight: 400; }
+    .seal-caption { font-size: 10px; letter-spacing: .4em; text-transform: uppercase; color: var(--muted); }
+
+    /* Marquee */
+    .brands { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 0; overflow: hidden; }
+    .marquee { display: flex; gap: 64px; width: max-content; animation: scroll 32s linear infinite; }
+    .marquee span { font-size: 13px; letter-spacing: .4em; text-transform: uppercase; color: rgba(244,239,230,.45); white-space: nowrap; }
+    .marquee span.dot { color: var(--gold); letter-spacing: 0; }
+    @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* About */
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
+    .about-grid .lead { font-size: 18px; max-width: none; }
+    .problem {
+      margin-top: 56px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line);
+    }
+    .problem div { padding: 36px; }
+    .problem div + div { border-left: 1px solid var(--line); background: var(--ink-2); }
+    .problem p { margin-top: 12px; font-size: 18px; }
+
+    /* Collection */
+    .collection { background: var(--cream); color: var(--ink); }
+    .collection .lead { color: rgba(22,21,20,.65); }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 40px; margin-bottom: 56px; flex-wrap: wrap; }
+    .products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .product .ph {
+      aspect-ratio: 3 / 4;
+      background: repeating-linear-gradient(135deg, #ebe4d6 0 1px, transparent 1px 14px), #efe9de;
+      border: 1px solid #e0d6c3;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: transform .4s;
+    }
+    .product:hover .ph { transform: translateY(-4px); }
+    .ph-label { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: #9c8e72; background: #efe9de; padding: 6px 12px; }
+    .product h3 { margin-top: 18px; }
+    .product p { font-size: 14px; color: rgba(22,21,20,.6); }
+    .product .price { font-size: 13px; color: var(--gold); font-weight: 500; margin-top: 4px; }
+    .collection-note { margin-top: 48px; padding-top: 28px; border-top: 1px solid #e0d6c3; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; font-size: 14px; color: rgba(22,21,20,.65); }
+    .collection .btn-solid { color: var(--ink); }
+
+    /* Process */
+    .steps { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); margin-top: 64px; }
+    .step { padding: 36px 26px 10px 0; position: relative; }
+    .step + .step { padding-left: 26px; border-left: 1px solid var(--line); }
+    .step .num { font-size: 13px; color: var(--gold); font-weight: 500; letter-spacing: .1em; }
+    .step h3 { margin: 18px 0 10px; }
+    .step p { font-size: 14px; color: var(--muted); }
+
+    /* Trust */
+    .trust { background: var(--ink-2); }
+    .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 56px; }
+    .trust-card { background: var(--ink-2); padding: 44px 36px; }
+    .trust-card svg { width: 28px; height: 28px; stroke: var(--gold); fill: none; stroke-width: 1.2; }
+    .trust-card h3 { margin: 26px 0 10px; }
+    .trust-card p { font-size: 15px; color: var(--muted); }
+
+    /* Sustainability */
+    .sustain { background: var(--sand); color: var(--ink); }
+    .sustain-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 80px; align-items: center; }
+    .sustain .eyebrow { color: #6e5a30; }
+    .sustain p { font-size: 18px; color: rgba(22,21,20,.75); }
+    .sustain ul { list-style: none; margin-top: 30px; }
+    .sustain li { padding: 16px 0; border-top: 1px solid rgba(22,21,20,.15); display: flex; gap: 18px; font-size: 15px; }
+    .sustain li::before { content: "—"; color: #8a6f3a; }
+
+    /* Team */
+    .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 56px; }
+    .member .avatar {
+      aspect-ratio: 1; border-radius: 50%;
+      border: 1px solid rgba(185,148,79,.6);
+      background: var(--ink-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 300; letter-spacing: .12em; color: var(--gold);
+      max-width: 180px;
+    }
+    .member h3 { margin-top: 22px; font-weight: 400; }
+    .member .role { font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--gold); margin-top: 4px; }
+    .member p { font-size: 14px; color: var(--muted); margin-top: 10px; }
+
+    /* Contact */
+    .contact { border-top: 1px solid var(--line); text-align: center; }
+    .contact h2 { font-size: clamp(34px, 5.5vw, 64px); max-width: 820px; margin: 18px auto 22px; }
+    .contact .lead { margin: 0 auto 44px; }
+    .channels { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .channels .btn { min-width: 150px; justify-content: center; }
+
+    footer { border-top: 1px solid var(--line); padding: 44px 0; font-size: 13px; color: var(--muted); }
+    .foot { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
+
+    /* Reveal */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .marquee { animation: none; }
+      html { scroll-behavior: auto; }
+    }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .hero-grid, .about-grid, .sustain-grid { grid-template-columns: 1fr; gap: 48px; }
+      .seal-frame { max-width: 420px; aspect-ratio: 1; }
+      .products { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: 1fr; border-top: 0; }
+      .step, .step + .step { padding: 26px 0; border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 56px 1fr; column-gap: 12px; }
+      .step h3 { margin: 0 0 6px; }
+      .step p { grid-column: 2; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: repeat(2, 1fr); gap: 40px 24px; }
+    }
+    @media (max-width: 760px) {
+      section { padding: 88px 0; }
+      .wrap { padding: 0 16px; }
+      .menu-btn { display: block; }
+      .nav-links {
+        position: fixed; inset: 76px 0 auto 0;
+        flex-direction: column; gap: 0;
+        background: rgba(22,21,20,.98); border-bottom: 1px solid var(--line);
+        padding: 8px 16px 20px;
+        transform: translateY(-8px); opacity: 0; pointer-events: none;
+        transition: opacity .25s, transform .25s;
+      }
+      .nav-links a { display: block; padding: 14px 0; border-bottom: 1px solid var(--line); }
+      header.open { background: rgba(22,21,20,.98); }
+      header.open .nav-links { opacity: 1; transform: none; pointer-events: auto; }
+      header.open .menu-btn span:first-child { transform: translateY(3.5px) rotate(45deg); }
+      header.open .menu-btn span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+      .hero { padding-top: 120px; }
+      .values { gap: 12px; font-size: 10px; letter-spacing: .22em; flex-wrap: wrap; }
+      .values span::after { margin-left: 12px; }
+      .problem { grid-template-columns: 1fr; }
+      .problem div + div { border-left: 0; border-top: 1px solid var(--line); }
+      .problem div { padding: 28px 24px; }
+      .products { gap: 14px; }
+      .trust-card { padding: 34px 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<header id="top">
+  <nav class="wrap nav" aria-label="Huvudmeny">
+    <a href="#" class="logo">Atelier <b>UF</b></a>
+    <ul class="nav-links">
+      <li><a href="#om-oss">Om oss</a></li>
+      <li><a href="#kollektion">Kollektion</a></li>
+      <li><a href="#sa-funkar-det">Så funkar det</a></li>
+      <li><a href="#teamet">Teamet</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+    <button class="menu-btn" aria-label="Öppna meny" aria-expanded="false"><span></span><span></span></button>
+  </nav>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow reveal">UF-företag · Växjö, Kronoberg</p>
+        <h1 class="reveal">Atelier<br>Fashion<span class="uf">UF</span></h1>
+        <p class="lead reveal">Trendiga märkeskläder till bra priser. Vi handplockar, äkthetskontrollerar och säljer vidare plagg från kända varumärken – så att du kan bära det du gillar utan att betala nypris.</p>
+        <div class="hero-actions reveal">
+          <a href="#kollektion" class="btn btn-solid">Se kollektionen</a>
+          <a href="#kontakt" class="btn btn-ghost">Kontakta oss</a>
+        </div>
+        <div class="values reveal"><span>Trendigt</span><span>Prisvärt</span><span>Pålitligt</span></div>
+      </div>
+      <div class="seal-frame reveal" aria-hidden="true">
+        <div class="seal-inner">
+          <div class="seal"><strong>ATELIER</strong><small>FASHION</small></div>
+          <p class="seal-caption">Est. 2026</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRANDS -->
+  <div class="brands" aria-label="Varumärken vi säljer">
+    <div class="marquee">
+      <span>Golden Goose</span><span class="dot">✦</span><span>Lanvin</span><span class="dot">✦</span><span>Replay</span><span class="dot">✦</span><span>Streetwear</span><span class="dot">✦</span><span>Tröjor</span><span class="dot">✦</span><span>Skor</span><span class="dot">✦</span><span>Jeans</span><span class="dot">✦</span><span>Jackor</span><span class="dot">✦</span>
+      <span>Golden Goose</span><span class="dot">✦</span><span>Lanvin</span><span class="dot">✦</span><span>Replay</span><span class="dot">✦</span><span>Streetwear</span><span class="dot">✦</span><span>Tröjor</span><span class="dot">✦</span><span>Skor</span><span class="dot">✦</span><span>Jeans</span><span class="dot">✦</span><span>Jackor</span><span class="dot">✦</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="om-oss">
+    <div class="wrap">
+      <div class="about-grid">
+        <div class="reveal">
+          <p class="eyebrow">Om oss</p>
+          <h2>Märkeskläder för dig som har koll på stilen.</h2>
+        </div>
+        <p class="lead reveal">Atelier Fashion är ett UF-företag från Kungsmadskolan i Växjö. Vi återförsäljer märkeskläder och erbjuder trendiga, prisvärda plagg för killar som är intresserade av mode, streetwear och nya trender. Vi är själva i samma ålder som våra kunder – vi vet vad som gäller.</p>
+      </div>
+      <div class="problem reveal">
+        <div>
+          <p class="eyebrow">Problemet</p>
+          <p>Märkeskläder är ofta dyra och svåra att hitta till ett bra pris.</p>
+        </div>
+        <div>
+          <p class="eyebrow">Vår lösning</p>
+          <p>Vi gör det enkelt. Äkta plagg, ärligt beskrivna, till priser under butik.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTION -->
+  <section id="kollektion" class="collection">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="reveal">
+          <p class="eyebrow">Kollektion</p>
+          <h2>Utvalda plagg</h2>
+        </div>
+        <p class="lead reveal">Ett litet, snabbt roterande lager – nya plagg dyker upp löpande. Följ oss för att inte missa något.</p>
+      </div>
+
+      <div class="products">
+        <article class="product reveal">
+          <div class="ph"><span class="ph-label">Bild kommer</span></div>
+          <h3>Tröjor</h3>
+          <p>Hoodies & sweatshirts</p>
+          <p class="price">Från 400 kr</p>
+        </article>
+        <article class="product reveal">
+          <div class="ph"><span class="ph-label">Bild kommer</span></div>
+          <h3>Skor</h3>
+          <p>Sneakers från kända märken</p>
+          <p class="price">Från 1 500 kr</p>
+        </article>
+        <article class="product reveal">
+          <div class="ph"><span class="ph-label">Bild kommer</span></div>
+          <h3>Jeans</h3>
+          <p>Klassiska & moderna passformer</p>
+          <p class="price">Pris på förfrågan</p>
+        </article>
+        <article class="product reveal">
+          <div class="ph"><span class="ph-label">Bild kommer</span></div>
+          <h3>Jackor</h3>
+          <p>Ytterplagg för säsongen</p>
+          <p class="price">Pris på förfrågan</p>
+        </article>
+      </div>
+
+      <div class="collection-note reveal">
+        <p>Alla plagg säljs via Instagram, TikTok, Plick och Vinted. Frakt med PostNord, Bring eller Instabox.</p>
+        <a href="#kontakt" class="btn btn-solid">Fråga om ett plagg</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="sa-funkar-det">
+    <div class="wrap">
+      <p class="eyebrow reveal">Så funkar det</p>
+      <h2 class="reveal">Från inköp till din dörr.</h2>
+      <div class="steps">
+        <div class="step reveal"><span class="num">01</span><div><h3>Inköp</h3><p>Vi köper in plagg från Sellpy, Vinted, Plick och en privat leverantör i Italien.</p></div></div>
+        <div class="step reveal"><span class="num">02</span><div><h3>Kontroll</h3><p>Varje plagg kontrolleras – skick och äkthet – innan det säljs.</p></div></div>
+        <div class="step reveal"><span class="num">03</span><div><h3>Publicering</h3><p>Vi fotograferar plaggen och lägger ut dem på våra sociala medier.</p></div></div>
+        <div class="step reveal"><span class="num">04</span><div><h3>Köp</h3><p>Du hör av dig direkt till oss och vi gör upp affären.</p></div></div>
+        <div class="step reveal"><span class="num">05</span><div><h3>Leverans</h3><p>Plagget skickas via Plick eller Vinted med PostNord, Bring eller Instabox.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="trust">
+    <div class="wrap">
+      <p class="eyebrow reveal">Därför Atelier</p>
+      <h2 class="reveal">Tryggt att handla.</h2>
+      <div class="trust-grid">
+        <div class="trust-card reveal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+          <h3>Äkthetskontroll</h3>
+          <p>Vi kontrollerar att varje plagg är äkta innan det läggs ut. Inga kopior, inga överraskningar.</p>
+        </div>
+        <div class="trust-card reveal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+          <h3>Ärlig beskrivning</h3>
+          <p>Vi är ärliga om skicket. Du vet exakt vad du köper – med bilder och tydlig info.</p>
+        </div>
+        <div class="trust-card reveal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+          <h3>Lägre pris än butik</h3>
+          <p>Kända märken till priser under nypris. Mer stil för pengarna.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUSTAINABILITY -->
+  <section class="sustain">
+    <div class="wrap sustain-grid">
+      <div class="reveal">
+        <p class="eyebrow">Hållbarhet</p>
+        <h2>Ett nytt liv för varje plagg.</h2>
+      </div>
+      <div class="reveal">
+        <p>När vi återförsäljer kläder får plaggen ett nytt liv, och det minskar behovet av att tillverka nya. Bra för plånboken – och för planeten.</p>
+        <ul>
+          <li>Miljövänliga förpackningar</li>
+          <li>Flera plagg i samma paket för mindre frakt</li>
+          <li>Rökfri förvaring – galgat och plastat direkt efter kontroll</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section id="teamet">
+    <div class="wrap">
+      <p class="eyebrow reveal">Teamet</p>
+      <h2 class="reveal">Fyra personer, tydliga roller.</h2>
+      <div class="team-grid">
+        <div class="member reveal">
+          <div class="avatar">MR</div>
+          <h3>Mohamad Rezai</h3>
+          <p class="role">VD</p>
+          <p>Leder företaget och ser till att vi når våra mål.</p>
+        </div>
+        <div class="member reveal">
+          <div class="avatar">OS</div>
+          <h3>Oliver Sandahl</h3>
+          <p class="role">Ekonomichef</p>
+          <p>Ansvarar för ekonomi, budget och prissättning.</p>
+        </div>
+        <div class="member reveal">
+          <div class="avatar">IT</div>
+          <h3>Isak Torstensson</h3>
+          <p class="role">Säljchef</p>
+          <p>Ansvarar för försäljning och kundkontakt.</p>
+        </div>
+        <div class="member reveal">
+          <div class="avatar">GS</div>
+          <h3>Gunnar Svensson</h3>
+          <p class="role">Marknadsföringschef</p>
+          <p>Ansvarar för marknadsföring och sociala medier.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="kontakt" class="contact">
+    <div class="wrap">
+      <p class="eyebrow reveal">Kontakt</p>
+      <h2 class="reveal">Hittat något du gillar? Hör av dig.</h2>
+      <p class="lead reveal">Skicka ett meddelande till oss på sociala medier så hjälper vi dig med storlek, skick och frakt.</p>
+      <!-- Byt ut href="#" mot era riktiga länkar -->
+      <div class="channels reveal">
+        <a href="#" class="btn btn-solid">Instagram</a>
+        <a href="#" class="btn btn-ghost">TikTok</a>
+        <a href="#" class="btn btn-ghost">Plick</a>
+        <a href="#" class="btn btn-ghost">Vinted</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p class="logo">Atelier Fashion <b>UF</b></p>
+    <p>Ett UF-företag från Kungsmadskolan, Växjö · Verksamhetsår 2026/2027</p>
+    <p>© <span id="year">2026</span> Atelier Fashion UF</p>
+  </div>
+</footer>
+
+<script>
+  const header = document.querySelector('header');
+  const menuBtn = document.querySelector('.menu-btn');
+
+  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 20);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  menuBtn.addEventListener('click', () => {
+    const open = header.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open);
+  });
+  document.querySelectorAll('.nav-links a').forEach(a =>
+    a.addEventListener('click', () => {
+      header.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    })
+  );
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
